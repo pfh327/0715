@@ -36,6 +36,33 @@ body {
   padding: 32px 20px 56px;
 }
 
+.auth-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+  padding: 20px 22px;
+  background: linear-gradient(180deg, #fffefb 0%, #fff6e7 100%);
+  border: 1px solid #efd9b7;
+  border-radius: var(--radius-xl);
+}
+
+.auth-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 10px 12px;
+  align-items: end;
+  width: min(100%, 560px);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
 .hero, .workspace, .two-col, .home-grid, .report-grid {
   display: grid;
   gap: 24px;
@@ -272,6 +299,7 @@ button {
   .shell { padding: 18px 14px 40px; }
   .hero-points, .summary-stats, .input-grid, .analysis-grid, .report-meta { grid-template-columns: 1fr; }
   .message-tabs { grid-template-columns: 1fr; border-radius: 18px; }
+  .auth-card, .auth-form { grid-template-columns: 1fr; display: grid; }
 }
 
 @media print {

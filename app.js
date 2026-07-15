@@ -1,4 +1,10 @@
 const STORAGE_KEY = "classcare-demo-v1";
+const SUPABASE_URL = "https://cukdtvyspcobplglwkdz.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_mCTUYJuJaA2xbZlzUyEXUg_kCNWhV6v";
+const SUPABASE_SEED_KEY = "classcare-supabase-seeded-v1";
+const supabase = window.supabase?.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+  : null;
 
 const demoData = {
   students: [
@@ -57,18 +63,24 @@ demoData.records = [
   }
 ];
 
-const state = loadState();
-let selectedStudentId = sessionStorage.getItem("classcare-selected-student") || state.students[0]?.id || null;
+const state = { students: [], records: [] };
+let selectedStudentId = sessionStorage.getItem("classcare-selected-student") || null;
 let selectedTags = [];
 let activeMessageType = sessionStorage.getItem("classcare-message-type") || "student";
 let ocrWorkerPromise = null;
+let storageMode = "local";
+let reviewRecommendations = [];
+let savedReports = [];
+let currentUser = null;
 
 if (!["student", "parent"].includes(activeMessageType)) {
   activeMessageType = "student";
   sessionStorage.setItem("classcare-message-type", activeMessageType);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await initializeAuth();
+  await initializeAppState();
   const page = document.body.dataset.page;
   bindGlobal();
   if (page === "home") renderHomePage();
@@ -79,11 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function bindGlobal() {
+  renderAuthCard();
   const resetBtn = document.getElementById("resetDemoButton");
   const deleteBtn = document.getElementById("deleteStudentButton");
   const studentForm = document.getElementById("studentForm");
 
-  resetBtn?.addEventListener("click", () => {
+  resetBtn?.addEventListener("click", async () => {
     const confirmed = window.confirm("데모 데이터 전체를 초기화할까요? 이 작업은 되돌릴 수 없습니다.");
     if (!confirmed) return;
     const verify = window.prompt('초기화를 진행하려면 "RESET" 을 입력해 주세요.');
@@ -92,18 +105,21 @@ function bindGlobal() {
       alert("입력값이 일치하지 않아 초기화가 취소되었습니다.");
       return;
     }
-    localStorage.removeItem(STORAGE_KEY);
+    if (!requireAuthAction()) return;
+    await resetAllData();
     sessionStorage.removeItem("classcare-selected-student");
     location.reload();
   });
 
-  deleteBtn?.addEventListener("click", () => {
+  deleteBtn?.addEventListener("click", async () => {
     const student = getSelectedStudent();
     if (!student) return alert("삭제할 학생이 없습니다.");
     if (!window.confirm(`${student.name} 학생과 연결된 수업 기록을 모두 삭제할까요?`)) return;
     const verify = window.prompt(`삭제를 진행하려면 학생 이름 "${student.name}"을(를) 다시 입력해 주세요.`);
     if (verify === null) return;
     if (verify.trim() !== student.name) return alert("학생 이름이 일치하지 않아 삭제가 취소되었습니다.");
+    if (!requireAuthAction()) return;
+    await deleteStudent(student.id);
     state.students = state.students.filter((item) => item.id !== student.id);
     state.records = state.records.filter((record) => record.studentId !== student.id);
     selectedStudentId = state.students[0]?.id || null;
@@ -112,7 +128,7 @@ function bindGlobal() {
     location.reload();
   });
 
-  studentForm?.addEventListener("submit", (event) => {
+  studentForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const newStudent = {
       id: crypto.randomUUID(),
@@ -123,6 +139,8 @@ function bindGlobal() {
       parentNote: value("parentNote"),
       focus: value("studentFocus")
     };
+    if (!requireAuthAction()) return;
+    await saveStudent(newStudent);
     state.students.unshift(newStudent);
     selectedStudentId = newStudent.id;
     persist();
@@ -184,6 +202,7 @@ function renderSummary() {
   text("focusKeyword", tags[0] || "없음");
   const deleteBtn = document.getElementById("deleteStudentButton");
   if (deleteBtn) deleteBtn.disabled = !getSelectedStudent();
+  text("authStateHint", currentUser ? `${getCurrentUsername()} 계정으로 저장 중` : "로그인하면 개인 데이터가 저장됩니다.");
 }
 
 function renderHomePage() {
@@ -260,7 +279,7 @@ function renderRecordsPage() {
     selectedTags = exists ? selectedTags.filter((item) => item !== tag) : [...selectedTags, tag];
     button.classList.toggle("active", !exists);
   });
-  document.getElementById("recordForm")?.addEventListener("submit", (event) => {
+  document.getElementById("recordForm")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const record = {
       id: crypto.randomUUID(),
@@ -272,6 +291,8 @@ function renderRecordsPage() {
       weaknessNotes: value("weaknessNotes"),
       tags: [...selectedTags]
     };
+    if (!requireAuthAction()) return;
+    await saveLessonRecord(record);
     state.records.unshift(record);
     selectedStudentId = record.studentId;
     persist();
@@ -285,19 +306,26 @@ function renderReportsPage() {
   const records = getStudentRecords(student?.id);
   const latest = records[0];
   const weaknessStats = countTags(records);
+  const latestSavedReport = getLatestSavedReport(student?.id);
+  const reportSnapshot = buildReportSnapshot(student, records, latest, weaknessStats);
   text("reportStudentInfo", student ? `${student.name} 학생 기준으로 누적 리포트를 생성하고 있습니다. ${student.subject} · ${student.grade || "학년 미입력"} · ${student.schedule || "일정 미입력"}` : "학생관리 페이지에서 선택한 학생을 기준으로 리포트가 생성됩니다.");
-  document.getElementById("reportMeta").innerHTML = `
-    <div class="report-meta-item"><strong>학생 이름</strong><span>${student?.name || "-"}</span></div>
-    <div class="report-meta-item"><strong>과목</strong><span>${student?.subject || "-"}</span></div>
-    <div class="report-meta-item"><strong>누적 수업 수</strong><span>${records.length}회</span></div>
-    <div class="report-meta-item"><strong>최근 기록일</strong><span>${latest ? formatDate(latest.date) : "-"}</span></div>
-  `;
-  text("reportOverview", student && latest ? `${student.name} 학생은 현재 ${student.focus || "기초 학습 흐름 점검"}를 중심으로 수업을 이어가고 있습니다. 최근 수업에서는 ${latest.lessonSummary}` : "학생을 선택하면 이곳에 누적 학습 요약이 생성됩니다.");
-  text("reportProgress", records.length ? records.slice(0, 3).map((record) => `${formatDate(record.date)}에 ${record.lessonSummary}`).join(" ") : "학생 수업 기록이 아직 없습니다.");
-  document.getElementById("reportWeaknessList").innerHTML = Object.keys(weaknessStats).length
-    ? Object.entries(weaknessStats).slice(0, 4).map(([tag, count]) => `<li>${tag}: 총 ${count}회 기록되어 반복 관리가 필요한 영역입니다.</li>`).join("")
-    : "<li>누적 데이터가 생기면 반복 약점이 정리됩니다.</li>";
-  text("reportComment", latest ? `${student.name} 학생은 최근 ${records.length}회의 수업 기록을 통해 학습 흐름이 누적 관리되고 있습니다. 특히 ${latest.weaknessNotes} 부분을 중심으로 학습 경과를 살펴보고 있습니다.` : "학부모에게 전달할 요약 코멘트가 이곳에 생성됩니다.");
+  applyReportSnapshot(latestSavedReport || reportSnapshot);
+  text(
+    "reportSaveStatus",
+    latestSavedReport
+      ? `최근 저장 리포트: ${formatDateTime(latestSavedReport.createdAt)}`
+      : "현재 화면 기준으로 리포트를 저장할 수 있습니다."
+  );
+  document.getElementById("saveReportButton")?.addEventListener("click", async () => {
+    if (!student) {
+      alert("저장할 학생이 없습니다.");
+      return;
+    }
+    const saved = await saveReportSnapshot(reportSnapshot);
+    if (saved) {
+      text("reportSaveStatus", `리포트를 저장했어요. ${formatDateTime(saved.createdAt)} 기준`);
+    }
+  });
   document.getElementById("copyReportButton")?.addEventListener("click", async () => {
     await copyText(buildReportPlainText(), "copyReportButton", "리포트 복사");
   });
@@ -383,6 +411,16 @@ function renderReviewPage() {
     const generated = buildImageBasedReviewProblems(student, currentRecord, noteText, problemText);
     text("reviewSummary", generated.summary);
     document.getElementById("reviewProblemList").innerHTML = generated.problems.map((problem) => `<li>${problem}</li>`).join("");
+    if (!requireAuthAction(false)) return;
+    saveReviewRecommendation({
+      studentId: student?.id || null,
+      sourceProblemText: problemText,
+      teacherNote: noteText,
+      ocrText: problemText,
+      summary: generated.summary,
+      recommendedProblems: generated.problems,
+      imageUrl: imagePreview.querySelector("img")?.src || null
+    });
   });
 
   copyButton?.addEventListener("click", async () => {
@@ -863,6 +901,454 @@ function persist() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+async function initializeAppState() {
+  const localState = loadState();
+  if (!supabase) {
+    replaceState(localState);
+    return;
+  }
+
+  if (!currentUser) {
+    replaceState({ students: [], records: [] });
+    storageMode = "supabase";
+    persist();
+    ensureSelectedStudent();
+    return;
+  }
+
+  try {
+    const remoteState = await loadSupabaseState();
+    if (!remoteState.students.length && localState.students.length && !localStorage.getItem(getUserSeedKey())) {
+      await seedSupabase(localState);
+      localStorage.setItem(getUserSeedKey(), "true");
+      replaceState(localState);
+      storageMode = "supabase";
+      persist();
+      ensureSelectedStudent();
+      return;
+    }
+
+    if (remoteState.students.length || remoteState.records.length) {
+      replaceState(remoteState);
+      storageMode = "supabase";
+    } else {
+      replaceState(localState);
+    }
+  } catch (error) {
+    console.error("Supabase load failed, using local cache instead.", error);
+    replaceState(localState);
+  }
+
+  persist();
+  ensureSelectedStudent();
+}
+
+function replaceState(nextState) {
+  state.students = [...nextState.students];
+  state.records = [...nextState.records];
+}
+
+function ensureSelectedStudent() {
+  if (!state.students.some((student) => student.id === selectedStudentId)) {
+    selectedStudentId = state.students[0]?.id || null;
+  }
+  syncSelectedStudent();
+}
+
+async function loadSupabaseState() {
+  const [studentsResult, recordsResult, reviewsResult, reportsResult] = await Promise.all([
+    supabase.from("students").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false }),
+    supabase.from("lesson_records").select("*").eq("user_id", currentUser.id).order("lesson_date", { ascending: false }),
+    supabase.from("review_recommendations").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false }),
+    supabase.from("reports").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false })
+  ]);
+
+  if (studentsResult.error) throw studentsResult.error;
+  if (recordsResult.error) throw recordsResult.error;
+  if (reviewsResult.error) throw reviewsResult.error;
+  if (reportsResult.error) throw reportsResult.error;
+
+  reviewRecommendations = (reviewsResult.data || []).map(mapReviewFromDb);
+  savedReports = (reportsResult.data || []).map(mapReportFromDb);
+
+  return {
+    students: (studentsResult.data || []).map(mapStudentFromDb),
+    records: (recordsResult.data || []).map(mapRecordFromDb)
+  };
+}
+
+async function seedSupabase(seedState) {
+  const studentsPayload = seedState.students.map((student) => mapStudentToDb(student));
+  const recordsPayload = seedState.records.map((record) => mapRecordToDb(record));
+
+  if (studentsPayload.length) {
+    const { error } = await supabase.from("students").upsert(studentsPayload, { onConflict: "id" });
+    if (error) throw error;
+  }
+
+  if (recordsPayload.length) {
+    const { error } = await supabase.from("lesson_records").upsert(recordsPayload, { onConflict: "id" });
+    if (error) throw error;
+  }
+}
+
+async function saveStudent(student) {
+  if (!supabase || !currentUser) return;
+  const { error } = await supabase.from("students").insert(mapStudentToDb(student));
+  if (error) {
+    console.error("Failed to save student to Supabase.", error);
+    alert("학생 정보를 Supabase에 저장하지 못했어요.");
+  }
+}
+
+async function saveLessonRecord(record) {
+  if (!supabase || !currentUser) return;
+  const { error } = await supabase.from("lesson_records").insert(mapRecordToDb(record));
+  if (error) {
+    console.error("Failed to save lesson record to Supabase.", error);
+    alert("수업 기록을 Supabase에 저장하지 못했어요.");
+  }
+}
+
+async function saveReviewRecommendation(review) {
+  reviewRecommendations.unshift({
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    ...review
+  });
+
+  if (!supabase || !review.studentId || !currentUser) return;
+  const payload = mapReviewToDb(reviewRecommendations[0]);
+  const { error } = await supabase.from("review_recommendations").insert(payload);
+  if (error) {
+    console.error("Failed to save review recommendation to Supabase.", error);
+  }
+}
+
+async function saveReportSnapshot(snapshot) {
+  const report = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    ...snapshot
+  };
+  savedReports.unshift(report);
+
+  if (!supabase || !report.studentId || !currentUser) return report;
+  const payload = mapReportToDb(report);
+  const { error } = await supabase.from("reports").insert(payload);
+  if (error) {
+    console.error("Failed to save report to Supabase.", error);
+    alert("리포트를 Supabase에 저장하지 못했어요.");
+    return null;
+  }
+  return report;
+}
+
+async function deleteStudent(studentId) {
+  if (!supabase || !currentUser) return;
+  const { error } = await supabase.from("students").delete().eq("id", studentId).eq("user_id", currentUser.id);
+  if (error) {
+    console.error("Failed to delete student from Supabase.", error);
+    alert("Supabase에서 학생 삭제에 실패했어요.");
+  }
+}
+
+async function resetAllData() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(getUserSeedKey());
+  state.students = [];
+  state.records = [];
+  reviewRecommendations = [];
+  savedReports = [];
+  if (!supabase || !currentUser) return;
+  const recordsResult = await supabase.from("lesson_records").delete().eq("user_id", currentUser.id);
+  if (recordsResult.error) console.error(recordsResult.error);
+  const reviewsResult = await supabase.from("review_recommendations").delete().eq("user_id", currentUser.id);
+  if (reviewsResult.error) console.error(reviewsResult.error);
+  const reportsResult = await supabase.from("reports").delete().eq("user_id", currentUser.id);
+  if (reportsResult.error) console.error(reportsResult.error);
+  const studentsResult = await supabase.from("students").delete().eq("user_id", currentUser.id);
+  if (studentsResult.error) console.error(studentsResult.error);
+}
+
+function mapStudentFromDb(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    subject: row.subject || "",
+    grade: row.grade || "",
+    schedule: row.schedule || "",
+    parentNote: row.parent_note || "",
+    focus: row.focus || ""
+  };
+}
+
+function mapStudentToDb(student) {
+  return {
+    id: student.id,
+    user_id: currentUser?.id || null,
+    name: student.name,
+    subject: student.subject,
+    grade: student.grade,
+    schedule: student.schedule,
+    parent_note: student.parentNote,
+    focus: student.focus
+  };
+}
+
+function mapRecordFromDb(row) {
+  return {
+    id: row.id,
+    studentId: row.student_id,
+    date: row.lesson_date,
+    understanding: row.understanding || "",
+    lessonSummary: row.lesson_summary || "",
+    homework: row.homework || "",
+    weaknessNotes: row.weakness_notes || "",
+    tags: Array.isArray(row.tags) ? row.tags : []
+  };
+}
+
+function mapRecordToDb(record) {
+  return {
+    id: record.id,
+    user_id: currentUser?.id || null,
+    student_id: record.studentId,
+    lesson_date: record.date,
+    understanding: record.understanding,
+    lesson_summary: record.lessonSummary,
+    homework: record.homework,
+    weakness_notes: record.weaknessNotes,
+    tags: record.tags || []
+  };
+}
+
+function mapReviewFromDb(row) {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    studentId: row.student_id,
+    sourceProblemText: row.source_problem_text || "",
+    teacherNote: row.teacher_note || "",
+    ocrText: row.ocr_text || "",
+    summary: row.summary || "",
+    recommendedProblems: Array.isArray(row.recommended_problems) ? row.recommended_problems : [],
+    imageUrl: row.image_url || null
+  };
+}
+
+function mapReviewToDb(review) {
+  return {
+    id: review.id,
+    user_id: currentUser?.id || null,
+    student_id: review.studentId,
+    source_problem_text: review.sourceProblemText,
+    teacher_note: review.teacherNote,
+    ocr_text: review.ocrText,
+    summary: review.summary,
+    recommended_problems: review.recommendedProblems || [],
+    image_url: review.imageUrl
+  };
+}
+
+function getLatestSavedReport(studentId) {
+  if (!studentId) return null;
+  return savedReports.find((report) => report.studentId === studentId) || null;
+}
+
+function buildReportSnapshot(student, records, latest, weaknessStats) {
+  return {
+    studentId: student?.id || null,
+    reportTitle: student ? `${student.name} 학생 누적 분석 리포트` : "학생 누적 분석 리포트",
+    reportSummary: student && latest
+      ? `${student.name} 학생은 현재 ${student.focus || "기초 학습 흐름 점검"}를 중심으로 수업을 이어가고 있습니다. 최근 수업에서는 ${latest.lessonSummary}`
+      : "학생을 선택하면 이곳에 누적 학습 요약이 생성됩니다.",
+    reportComment: latest
+      ? `${student.name} 학생은 최근 ${records.length}회의 수업 기록을 통해 학습 흐름이 누적 관리되고 있습니다. 특히 ${latest.weaknessNotes} 부분을 중심으로 학습 경과를 살펴보고 있습니다.`
+      : "학부모에게 전달할 요약 코멘트가 이곳에 생성됩니다.",
+    weaknessSummary: Object.keys(weaknessStats).length
+      ? Object.entries(weaknessStats).slice(0, 4).map(([tag, count]) => `${tag}: 총 ${count}회 기록되어 반복 관리가 필요한 영역입니다.`)
+      : ["누적 데이터가 생기면 반복 약점이 정리됩니다."],
+    reportData: {
+      studentName: student?.name || "-",
+      subject: student?.subject || "-",
+      lessonCount: records.length,
+      lastRecordDate: latest ? formatDate(latest.date) : "-",
+      progress: records.length
+        ? records.slice(0, 3).map((record) => `${formatDate(record.date)}에 ${record.lessonSummary}`).join(" ")
+        : "학생 수업 기록이 아직 없습니다."
+    }
+  };
+}
+
+function applyReportSnapshot(snapshot) {
+  document.getElementById("reportMeta").innerHTML = `
+    <div class="report-meta-item"><strong>학생 이름</strong><span>${snapshot.reportData?.studentName || "-"}</span></div>
+    <div class="report-meta-item"><strong>과목</strong><span>${snapshot.reportData?.subject || "-"}</span></div>
+    <div class="report-meta-item"><strong>누적 수업 수</strong><span>${snapshot.reportData?.lessonCount || 0}회</span></div>
+    <div class="report-meta-item"><strong>최근 기록일</strong><span>${snapshot.reportData?.lastRecordDate || "-"}</span></div>
+  `;
+  text("reportOverview", snapshot.reportSummary || "");
+  text("reportProgress", snapshot.reportData?.progress || "");
+  document.getElementById("reportWeaknessList").innerHTML = (snapshot.weaknessSummary || [])
+    .map((item) => `<li>${item}</li>`)
+    .join("");
+  text("reportComment", snapshot.reportComment || "");
+}
+
+function mapReportFromDb(row) {
+  return {
+    id: row.id,
+    createdAt: row.created_at,
+    studentId: row.student_id,
+    reportTitle: row.report_title || "",
+    reportSummary: row.report_summary || "",
+    reportComment: row.report_comment || "",
+    weaknessSummary: normalizeWeaknessSummary(row.weakness_summary),
+    reportData: row.report_data || {}
+  };
+}
+
+function mapReportToDb(report) {
+  return {
+    id: report.id,
+    user_id: currentUser?.id || null,
+    student_id: report.studentId,
+    report_title: report.reportTitle,
+    report_summary: report.reportSummary,
+    report_comment: report.reportComment,
+    weakness_summary: Array.isArray(report.weaknessSummary) ? report.weaknessSummary.join("\n") : report.weaknessSummary,
+    report_data: report.reportData || {}
+  };
+}
+
+function normalizeWeaknessSummary(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim()) return value.split("\n").filter(Boolean);
+  return [];
+}
+
+async function initializeAuth() {
+  if (!supabase) return;
+  const { data } = await supabase.auth.getUser();
+  currentUser = data?.user || null;
+}
+
+function renderAuthCard() {
+  const shell = document.querySelector(".shell");
+  if (!shell) return;
+  const existing = document.getElementById("authCard");
+  if (existing) existing.remove();
+
+  const card = document.createElement("section");
+  card.className = "auth-card no-print";
+  card.id = "authCard";
+
+  if (currentUser) {
+    card.innerHTML = `
+      <div>
+        <h3>로그인 상태</h3>
+        <p class="muted" id="authStateHint">${getCurrentUsername()} 계정으로 저장 중</p>
+      </div>
+      <div class="auth-actions">
+        <span class="subject-pill">아이디 로그인</span>
+        <button class="secondary-btn" id="signOutButton" type="button">로그아웃</button>
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div>
+        <h3>개인정보 없이 로그인</h3>
+        <p class="muted">실제 이메일 대신 아이디와 비밀번호만으로 계정을 만들고 사용할 수 있어요.</p>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label>아이디<input type="text" id="authUsername" placeholder="예: teacher01" required></label>
+        <label>비밀번호<input type="password" id="authPassword" placeholder="비밀번호 입력" required></label>
+        <div class="auth-actions">
+          <button class="secondary-btn" id="signInButton" type="submit">로그인</button>
+          <button class="primary-btn" id="signUpButton" type="button">회원가입</button>
+        </div>
+      </form>
+    `;
+  }
+
+  shell.prepend(card);
+
+  document.getElementById("authForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await signInWithUsernamePassword();
+  });
+  document.getElementById("signUpButton")?.addEventListener("click", async () => {
+    await signUpWithUsernamePassword();
+  });
+  document.getElementById("signOutButton")?.addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  });
+}
+
+async function signUpWithUsernamePassword() {
+  if (!supabase) return;
+  const username = value("authUsername");
+  const password = value("authPassword");
+  if (!username || !password) {
+    alert("아이디와 비밀번호를 모두 입력해 주세요.");
+    return;
+  }
+  const email = buildPseudoEmail(username);
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { display_name: username }
+    }
+  });
+  if (error) {
+    alert(`회원가입 실패: ${error.message}`);
+    return;
+  }
+  alert("회원가입이 완료됐어요. 바로 로그인 상태로 전환되는지 확인해 주세요.");
+  location.reload();
+}
+
+async function signInWithUsernamePassword() {
+  if (!supabase) return;
+  const username = value("authUsername");
+  const password = value("authPassword");
+  if (!username || !password) {
+    alert("아이디와 비밀번호를 모두 입력해 주세요.");
+    return;
+  }
+  const email = buildPseudoEmail(username);
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert(`로그인 실패: ${error.message}`);
+    return;
+  }
+  location.reload();
+}
+
+function buildPseudoEmail(username) {
+  const normalized = Array.from(username.trim())
+    .map((char) => char.codePointAt(0).toString(16))
+    .join("");
+  return `user_${normalized}@classcare.app`;
+}
+
+function getCurrentUsername() {
+  return currentUser?.user_metadata?.display_name || "로그인 사용자";
+}
+
+function requireAuthAction(showAlert = true) {
+  if (currentUser) return true;
+  if (showAlert) alert("먼저 아이디와 비밀번호로 로그인해 주세요.");
+  return false;
+}
+
+function getUserSeedKey() {
+  return `${SUPABASE_SEED_KEY}-${currentUser?.id || "guest"}`;
+}
+
 function syncSelectedStudent() {
   if (selectedStudentId) sessionStorage.setItem("classcare-selected-student", selectedStudentId);
 }
@@ -880,6 +1366,18 @@ function formatDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function buildStudentCallName(name) {
