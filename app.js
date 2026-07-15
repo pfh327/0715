@@ -1254,53 +1254,43 @@ async function initializeAuth() {
 }
 
 function renderAuthCard() {
-  const shell = document.querySelector(".shell");
-  if (!shell) return;
-  const existing = document.getElementById("authCard");
-  if (existing) existing.remove();
+  const card = document.getElementById("authCard");
+  if (!card) return;
 
-  const card = document.createElement("section");
-  card.className = "auth-card no-print";
-  card.id = "authCard";
+  const title = card.querySelector("h3");
+  const hint = document.getElementById("authStateHint");
+  const form = document.getElementById("authForm");
+  const signInButton = document.getElementById("signInButton");
+  const signUpButton = document.getElementById("signUpButton");
+  const signOutButton = document.getElementById("signOutButton");
 
   if (currentUser) {
-    card.innerHTML = `
-      <div>
-        <h3>로그인 상태</h3>
-        <p class="muted" id="authStateHint">${getCurrentUsername()} 계정으로 저장 중</p>
-      </div>
-      <div class="auth-actions">
-        <span class="subject-pill">아이디 로그인</span>
-        <button class="secondary-btn" id="signOutButton" type="button">로그아웃</button>
-      </div>
-    `;
+    if (title) title.textContent = "로그인 상태";
+    if (hint) hint.textContent = `${getCurrentUsername()} 계정으로 저장 중`;
+    if (form) form.style.gridTemplateColumns = "1fr";
+    document.getElementById("authUsername")?.closest("label")?.style.setProperty("display", "none");
+    document.getElementById("authPassword")?.closest("label")?.style.setProperty("display", "none");
+    if (signInButton) signInButton.style.display = "none";
+    if (signUpButton) signUpButton.style.display = "none";
+    if (signOutButton) signOutButton.style.display = "inline-flex";
   } else {
-    card.innerHTML = `
-      <div>
-        <h3>개인정보 없이 로그인</h3>
-        <p class="muted">실제 이메일 대신 아이디와 비밀번호만으로 계정을 만들고 사용할 수 있어요.</p>
-      </div>
-      <form id="authForm" class="auth-form">
-        <label>아이디<input type="text" id="authUsername" placeholder="예: teacher01" required></label>
-        <label>비밀번호<input type="password" id="authPassword" placeholder="비밀번호 입력" required></label>
-        <div class="auth-actions">
-          <button class="secondary-btn" id="signInButton" type="submit">로그인</button>
-          <button class="primary-btn" id="signUpButton" type="button">회원가입</button>
-        </div>
-      </form>
-    `;
+    if (title) title.textContent = "개인정보 없이 로그인";
+    if (hint) hint.textContent = "실제 이메일 대신 아이디와 비밀번호만으로 계정을 만들고 사용할 수 있어요.";
+    document.getElementById("authUsername")?.closest("label")?.style.removeProperty("display");
+    document.getElementById("authPassword")?.closest("label")?.style.removeProperty("display");
+    if (signInButton) signInButton.style.display = "inline-flex";
+    if (signUpButton) signUpButton.style.display = "inline-flex";
+    if (signOutButton) signOutButton.style.display = "none";
   }
 
-  shell.prepend(card);
-
-  document.getElementById("authForm")?.addEventListener("submit", async (event) => {
+  form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     await signInWithUsernamePassword();
   });
-  document.getElementById("signUpButton")?.addEventListener("click", async () => {
+  signUpButton?.addEventListener("click", async () => {
     await signUpWithUsernamePassword();
   });
-  document.getElementById("signOutButton")?.addEventListener("click", async () => {
+  signOutButton?.addEventListener("click", async () => {
     await supabase.auth.signOut();
     location.reload();
   });

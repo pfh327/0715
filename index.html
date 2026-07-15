@@ -18,6 +18,21 @@
 </head>
 <body data-page="home">
   <div class="shell">
+    <section class="auth-card no-print" id="authCard">
+      <div>
+        <h3>개인정보 없이 로그인</h3>
+        <p class="muted" id="authStateHint">실제 이메일 대신 아이디와 비밀번호만으로 계정을 만들고 사용할 수 있어요.</p>
+      </div>
+      <form id="authForm" class="auth-form">
+        <label>아이디<input type="text" id="authUsername" placeholder="예: teacher01" required></label>
+        <label>비밀번호<input type="password" id="authPassword" placeholder="비밀번호 입력" required></label>
+        <div class="auth-actions">
+          <button class="secondary-btn" id="signInButton" type="submit">로그인</button>
+          <button class="primary-btn" id="signUpButton" type="button">회원가입</button>
+          <button class="secondary-btn" id="signOutButton" type="button" style="display:none;">로그아웃</button>
+        </div>
+      </form>
+    </section>
     <section class="hero">
       <article class="hero-card">
         <span class="eyebrow">Student & Parent Care</span>
