@@ -79,10 +79,24 @@ if (!["student", "parent"].includes(activeMessageType)) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await initializeAuth();
-  await initializeAppState();
-  const page = document.body.dataset.page;
+  try {
+    await initializeAuth();
+  } catch (error) {
+    console.error("Auth initialization failed.", error);
+  }
+
   bindGlobal();
+
+  try {
+    await initializeAppState();
+  } catch (error) {
+    console.error("App state initialization failed.", error);
+    replaceState(loadState());
+    ensureSelectedStudent();
+    renderShared();
+  }
+
+  const page = document.body.dataset.page;
   if (page === "home") renderHomePage();
   if (page === "students") renderStudentsPage();
   if (page === "records") renderRecordsPage();
@@ -1230,7 +1244,12 @@ function normalizeWeaknessSummary(value) {
 
 async function initializeAuth() {
   if (!supabase) return;
-  const { data } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Failed to fetch auth user.", error);
+    currentUser = null;
+    return;
+  }
   currentUser = data?.user || null;
 }
 
