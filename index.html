@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassCare | 우리 아이 학습 케어</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --canvas: #fffdf9;
+      --surface: #ffffff;
+      --surface-elevated: #fff9f1;
+      --surface-soft: #fdf4e7;
+      --ink: #2d2a26;
+      --ink-strong: #1f1c18;
+      --muted: #7d746a;
+      --line: #f0e4d6;
+      --line-strong: #e3d0bb;
+      --brand: #ffbf4d;
+      --brand-active: #f3ad2e;
+      --brand-ink: #181a20;
+      --success: #4ea97d;
+      --shadow: none;
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans KR", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(255, 191, 77, 0.18), transparent 24%),
+        linear-gradient(180deg, #fffdf9 0%, #fff7ef 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 24px;
+    }
+
+    .hero-card,
+    .summary-card,
+    .panel,
+    .student-card,
+    .record-card,
+    .message-card,
+    .analysis-card,
+    .timeline-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 34px;
+      background: linear-gradient(180deg, #ffffff 0%, #fffaf4 100%);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #fff2cf;
+      color: #9a6500;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid #f4dda1;
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      color: var(--ink-strong);
+    }
+
+    .hero-copy {
+      max-width: 700px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .hero-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .hero-point {
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      background: #ffffff;
+      border: 1px solid var(--line);
+    }
+
+    .hero-point strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .hero-point span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .summary-card {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      background: linear-gradient(180deg, #ffefcf 0%, #ffe0ab 100%);
+      color: var(--ink-strong);
+    }
+
+    .summary-card h2,
+    .panel h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .summary-card p {
+      margin: 0;
+      color: #7a6652;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-box {
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(205, 170, 112, 0.22);
+    }
+
+    .stat-label {
+      display: block;
+      font-size: 12px;
+      color: #8a7257;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--brand);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .panel {
+      padding: 24px;
+      background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+      background: #ffffff;
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(255, 191, 77, 0.2);
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #707a8a;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      border-radius: var(--radius-md);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    }
+
+    button:hover {
+      opacity: 0.96;
+    }
+
+    .primary-btn {
+      background: var(--brand);
+      color: var(--brand-ink);
+      padding: 14px 18px;
+      box-shadow: none;
+    }
+
+    .primary-btn:hover {
+      background: var(--brand-active);
+    }
+
+    .secondary-btn,
+    .ghost-btn {
+      padding: 12px 16px;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .danger-btn {
+      padding: 12px 16px;
+      background: #fff4ef;
+      color: #c45a3c;
+      border: 1px solid #f0d0c3;
+    }
+
+    .ghost-btn {
+      background: #fffaf4;
+    }
+
+    .tag-row,
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-btn,
+    .chip {
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .chip {
+      background: #fff1cf;
+      color: #9a6500;
+      border: 1px solid #f1ddb0;
+    }
+
+    .tag-btn {
+      background: #fffaf4;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .tag-btn.active {
+      background: var(--brand);
+      color: var(--brand-ink);
+      border-color: var(--brand);
+    }
+
+    .layout-main {
+      display: grid;
+      gap: 24px;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+    }
+
+    .student-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .student-card {
+      padding: 18px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .student-card.active {
+      border-color: rgba(255, 191, 77, 0.5);
+      background: #fff8ec;
+    }
+
+    .student-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .student-name {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .subject-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff1cf;
+      color: #9a6500;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .student-meta {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .student-focus {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--line-strong);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .record-card,
+    .message-card,
+    .analysis-card,
+    .timeline-card,
+    .report-card {
+      padding: 24px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card-title h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .card-title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric-box {
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      background: #fffaf4;
+      border: 1px solid var(--line);
+    }
+
+    .metric-box strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .metric-box span {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 13px;
+    }
+
+    .insight-banner {
+      padding: 16px 18px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, #fff6e7 0%, #fff0d8 100%);
+      border: 1px solid #f1dcc0;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .message-box {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      min-height: 188px;
+      white-space: pre-wrap;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .report-card {
+      background: linear-gradient(180deg, #fffdf8 0%, #fff8ee 100%);
+      border: 1px solid #ecd9bf;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .report-sheet {
+      background: #ffffff;
+      border: 1px solid #eadbc8;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .report-sheet h4 {
+      margin: 0;
+      font-size: 20px;
+      color: var(--ink-strong);
+    }
+
+    .report-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .report-meta-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff8ef;
+      border: 1px solid var(--line);
+    }
+
+    .report-meta-item strong {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .report-meta-item span {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink-strong);
+    }
+
+    .report-section {
+      display: grid;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .report-section strong {
+      font-size: 14px;
+      color: var(--ink-strong);
+    }
+
+    .report-section p,
+    .report-section ul {
+      margin: 0;
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .report-section ul {
+      padding-left: 18px;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+    }
+
+    .timeline-item {
+      display: grid;
+      gap: 8px;
+      padding: 16px 18px;
+      border-radius: var(--radius-lg);
+      background: #fffaf4;
+      border: 1px solid var(--line);
+    }
+
+    .timeline-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .timeline-body {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .empty-state {
+      padding: 28px;
+      border-radius: var(--radius-lg);
+      border: 1px dashed var(--line-strong);
+      background: #fffaf4;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .helper {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1100px) {
+      .hero,
+      .workspace,
+      .top-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding: 18px 14px 40px;
+      }
+
+      .hero-card,
+      .summary-card,
+      .panel,
+      .record-card,
+      .message-card,
+      .analysis-card,
+      .timeline-card {
+        padding: 20px;
+      }
+
+      .hero-points,
+      .input-grid,
+      .analysis-grid,
+      .summary-stats,
+      .report-meta {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      .hero,
+      .panel,
+      .record-card,
+      .message-card,
+      .analysis-card,
+      .timeline-card,
+      .footer-note {
+        display: none !important;
+      }
+
+      .workspace {
+        display: block;
+      }
+
+      .layout-main {
+        display: block;
+      }
+
+      .report-card {
+        border: 0;
+        background: #ffffff;
+        padding: 0;
+      }
+
+      .report-actions {
+        display: none !important;
+      }
+
+      .report-sheet {
+        border: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <article class="hero-card">
+        <span class="eyebrow">Student & Parent Care</span>
+        <h1>우리 아이 수업 기록과 학습 흐름을 더 쉽고 따뜻하게</h1>
+        <p class="hero-copy">
+          과외 선생님이 수업 내용을 정리하면 학부모는 아이의 학습 흐름을 한눈에 확인하고,
+          선생님은 학생별 진도와 반복 실수를 부담 없이 누적해서 관리할 수 있습니다.
+        </p>
+        <div class="hero-points">
+          <div class="hero-point">
+            <strong>수업 내용 한눈에 정리</strong>
+            <span>오늘 배운 내용과 숙제를 보기 쉽게 남겨 학부모도 바로 확인할 수 있습니다.</span>
+          </div>
+          <div class="hero-point">
+            <strong>학부모 알림장 자동 작성</strong>
+            <span>선생님이 따로 문장을 고민하지 않아도 자연스러운 안내 메시지가 만들어집니다.</span>
+          </div>
+          <div class="hero-point">
+            <strong>아이별 학습 흐름 확인</strong>
+            <span>반복 실수와 약한 부분을 차곡차곡 쌓아 아이별 학습 상태를 살펴볼 수 있습니다.</span>
+          </div>
+        </div>
+      </article>
+
+      <aside class="summary-card">
+        <div>
+          <h2>우리 아이 학습 케어</h2>
+          <p>학생을 등록하고 수업 기록을 남기면 학부모용 알림장과 학습 흐름 요약이 바로 함께 업데이트됩니다.</p>
+        </div>
+        <div class="summary-stats">
+          <div class="stat-box">
+            <span class="stat-label">등록된 학생</span>
+            <span class="stat-value" id="studentCount">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">쌓인 수업 기록</span>
+            <span class="stat-value" id="recordCount">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">지금 보는 학생</span>
+            <span class="stat-value" id="selectedStudentLabel">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">최근 체크 포인트</span>
+            <span class="stat-value" id="focusKeyword">-</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="workspace">
+      <aside class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>학생 프로필</h2>
+            <p>학생별 수업 정보와 학부모 메모를 정리해 두고, 아이마다 다른 학습 흐름을 살펴봅니다.</p>
+          </div>
+          <div class="report-actions">
+            <button class="danger-btn" id="deleteStudentButton" type="button">선택 학생 삭제</button>
+            <button class="ghost-btn" id="resetDemoButton" type="button">데모 초기화</button>
+          </div>
+        </div>
+
+        <form id="studentForm">
+          <div class="input-grid">
+            <label>
+              학생 이름
+              <input type="text" id="studentName" placeholder="예: 김민서" required>
+            </label>
+            <label>
+              과목
+              <select id="studentSubject" required>
+                <option value="">선택</option>
+                <option>수학</option>
+                <option>영어</option>
+                <option>과학</option>
+                <option>국어</option>
+              </select>
+            </label>
+          </div>
+          <div class="input-grid">
+            <label>
+              학년
+              <input type="text" id="studentGrade" placeholder="예: 중2">
+            </label>
+            <label>
+              수업 일정
+              <input type="text" id="studentSchedule" placeholder="예: 화/목 19:00">
+            </label>
+          </div>
+          <label>
+            학부모 메모
+            <input type="text" id="parentNote" placeholder="예: 숙제 확인을 자주 요청하심">
+          </label>
+          <label>
+            현재 집중 영역
+            <textarea id="studentFocus" placeholder="예: 분수 계산 실수가 잦고 서술형 풀이가 짧음"></textarea>
+          </label>
+          <button class="primary-btn" type="submit">학생 추가하기</button>
+          <p class="helper">브라우저에 자동 저장되므로 새로고침 후에도 데모 데이터가 유지됩니다.</p>
+        </form>
+
+        <div class="panel-header" style="margin-top: 26px;">
+          <div>
+            <h2>학생 목록</h2>
+            <p>학생을 선택하면 오른쪽에 해당 아이의 알림장과 학습 기록이 표시됩니다.</p>
+          </div>
+        </div>
+        <div class="student-list" id="studentList"></div>
+      </aside>
+
+      <div class="layout-main">
+        <section class="top-grid">
+          <article class="record-card">
+            <div class="card-title">
+              <div>
+                <h3>오늘 수업 기록</h3>
+                <p>오늘 배운 내용과 숙제를 남기면 학부모용 안내와 학습 요약이 함께 정리됩니다.</p>
+              </div>
+            </div>
+
+            <form id="recordForm">
+              <label>
+                학생 선택
+                <select id="recordStudentSelect" required></select>
+              </label>
+              <div class="input-grid">
+                <label>
+                  수업 날짜
+                  <input type="date" id="recordDate" required>
+                </label>
+                <label>
+                  이해도
+                  <select id="understandingLevel" required>
+                    <option value="">선택</option>
+                    <option>높음</option>
+                    <option>보통</option>
+                    <option>낮음</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                오늘 배운 내용
+                <textarea id="lessonSummary" placeholder="예: 일차방정식 활용 문제와 오답 유형 정리" required></textarea>
+              </label>
+              <label>
+                숙제
+                <textarea id="homework" placeholder="예: 유형서 3-2 1~12번, 오답노트 작성" required></textarea>
+              </label>
+              <label>
+                어려워한 부분 / 반복 실수
+                <textarea id="weaknessNotes" placeholder="예: 부호 처리 실수, 문장제에서 식 세우기 어려워함" required></textarea>
+              </label>
+              <div>
+                <span class="helper">약점 태그 선택</span>
+                <div class="tag-row" id="tagSelector">
+                  <button class="tag-btn" data-tag="연산 실수" type="button">연산 실수</button>
+                  <button class="tag-btn" data-tag="개념 이해" type="button">개념 이해</button>
+                  <button class="tag-btn" data-tag="서술형" type="button">서술형</button>
+                  <button class="tag-btn" data-tag="응용 문제" type="button">응용 문제</button>
+                  <button class="tag-btn" data-tag="집중력" type="button">집중력</button>
+                </div>
+              </div>
+              <button class="primary-btn" type="submit">수업 기록 저장하기</button>
+            </form>
+          </article>
+
+          <article class="message-card">
+            <div class="card-title">
+              <div>
+                <h3>학부모 안내 메시지</h3>
+                <p>현재 선택된 학생의 최근 수업 기록을 바탕으로 바로 공유할 수 있게 정리됩니다.</p>
+              </div>
+              <button class="secondary-btn" id="copyMessageButton" type="button">문구 복사</button>
+            </div>
+            <div class="message-box" id="messageBox">학생을 등록하고 수업 기록을 저장하면 이곳에 학부모용 알림장이 생성됩니다.</div>
+          </article>
+        </section>
+
+        <section class="analysis-card">
+          <div class="card-title">
+            <div>
+              <h3>학생별 학습 흐름</h3>
+              <p>수업 기록이 쌓일수록 진도 흐름과 반복적으로 어려워하는 부분이 더 잘 보입니다.</p>
+            </div>
+          </div>
+          <div class="analysis-grid">
+            <div class="metric-box">
+              <strong>최근 학습 흐름</strong>
+              <span id="progressTrend">학생을 선택하면 최근 수업 흐름이 표시됩니다.</span>
+            </div>
+            <div class="metric-box">
+              <strong>자주 어려워한 부분</strong>
+              <span id="weaknessSummary">누적 기록이 생기면 자주 등장한 약점이 요약됩니다.</span>
+            </div>
+            <div class="metric-box">
+              <strong>수업 반응</strong>
+              <span id="understandingSummary">최근 이해도와 수업 반응이 정리됩니다.</span>
+            </div>
+          </div>
+          <div class="insight-banner" id="insightBanner">
+            현재는 분석할 학생이 없습니다. 왼쪽에서 학생을 등록해 주세요.
+          </div>
+        </section>
+
+        <section class="timeline-card">
+          <div class="card-title">
+            <div>
+              <h3>수업 기록 모아보기</h3>
+              <p>최근 수업 내용과 숙제, 어려웠던 부분을 순서대로 확인할 수 있습니다.</p>
+            </div>
+          </div>
+          <div class="timeline" id="timeline"></div>
+        </section>
+
+        <section class="report-card" id="reportCard">
+          <div class="card-title">
+            <div>
+              <h3>학생 누적 분석 리포트</h3>
+              <p>선택한 학생의 누적 학습 데이터를 문서형 리포트로 정리하고 인쇄 또는 PDF 저장할 수 있습니다.</p>
+            </div>
+            <div class="report-actions">
+              <button class="secondary-btn" id="copyReportButton" type="button">리포트 복사</button>
+              <button class="primary-btn" id="printReportButton" type="button">PDF / 인쇄</button>
+            </div>
+          </div>
+          <div class="report-sheet" id="reportSheet">
+            <h4>학생 누적 분석 리포트</h4>
+            <div class="report-meta" id="reportMeta"></div>
+            <div class="report-section">
+              <strong>최근 학습 요약</strong>
+              <p id="reportOverview">학생을 선택하면 이곳에 누적 학습 요약이 생성됩니다.</p>
+            </div>
+            <div class="report-section">
+              <strong>누적 학습 흐름</strong>
+              <p id="reportProgress">학생 수업 기록이 아직 없습니다.</p>
+            </div>
+            <div class="report-section">
+              <strong>반복적으로 어려워한 부분</strong>
+              <ul id="reportWeaknessList">
+                <li>누적 데이터가 생기면 반복 약점이 정리됩니다.</li>
+              </ul>
+            </div>
+            <div class="report-section">
+              <strong>학부모 공유 코멘트</strong>
+              <p id="reportComment">학부모에게 전달할 요약 코멘트가 이곳에 생성됩니다.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <p class="footer-note">ClassCare Demo · 학생 프로필 + 수업 기록 + 학부모 안내 + 학습 흐름 확인</p>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "classcare-demo-v1";
+
+    const demoData = {
+      students: [
+        {
+          id: crypto.randomUUID(),
+          name: "김민서",
+          subject: "수학",
+          grade: "중2",
+          schedule: "화/목 19:00",
+          parentNote: "숙제 진행 상황을 자세히 공유받길 원함",
+          focus: "분수 계산과 서술형 풀이를 함께 보강 중"
+        },
+        {
+          id: crypto.randomUUID(),
+          name: "이도윤",
+          subject: "영어",
+          grade: "초6",
+          schedule: "수/토 17:30",
+          parentNote: "영단어 암기 습관을 꾸준히 보고 싶어 하심",
+          focus: "독해는 무난하지만 문장 쓰기와 문법 실수가 잦음"
+        }
+      ],
+      records: []
+    };
+
+    demoData.records = [
+      {
+        id: crypto.randomUUID(),
+        studentId: demoData.students[0].id,
+        date: "2026-07-13",
+        understanding: "보통",
+        lessonSummary: "일차방정식 활용 문제를 풀고, 오답 유형별로 식 세우는 연습을 진행했습니다.",
+        homework: "유형서 3-2 1~12번, 틀린 문제는 오답노트 작성",
+        weaknessNotes: "문장제에서 식을 세우는 데 시간이 오래 걸리고, 부호 처리 실수가 반복되었습니다.",
+        tags: ["응용 문제", "연산 실수"]
+      },
+      {
+        id: crypto.randomUUID(),
+        studentId: demoData.students[0].id,
+        date: "2026-07-15",
+        understanding: "낮음",
+        lessonSummary: "분수와 소수 혼합 계산 문제를 복습하고, 서술형 풀이 순서를 다시 정리했습니다.",
+        homework: "프린트 2장, 분수 계산 15문제",
+        weaknessNotes: "서술형에서 풀이를 짧게 쓰고, 계산 과정 생략으로 실수가 발생했습니다.",
+        tags: ["서술형", "연산 실수"]
+      },
+      {
+        id: crypto.randomUUID(),
+        studentId: demoData.students[1].id,
+        date: "2026-07-14",
+        understanding: "보통",
+        lessonSummary: "독해 지문 2개를 풀고, 핵심 문장 찾기와 시제 문법을 복습했습니다.",
+        homework: "영단어 25개 암기, 독해 지문 1개",
+        weaknessNotes: "과거형과 현재완료를 혼동하고, 문장 작성 시 관사 누락이 있었습니다.",
+        tags: ["개념 이해"]
+      }
+    ];
+
+    const state = loadState();
+    let selectedStudentId = state.students[0]?.id ?? null;
+    let selectedTags = [];
+
+    const studentForm = document.getElementById("studentForm");
+    const recordForm = document.getElementById("recordForm");
+    const studentList = document.getElementById("studentList");
+    const recordStudentSelect = document.getElementById("recordStudentSelect");
+    const messageBox = document.getElementById("messageBox");
+    const progressTrend = document.getElementById("progressTrend");
+    const weaknessSummary = document.getElementById("weaknessSummary");
+    const understandingSummary = document.getElementById("understandingSummary");
+    const insightBanner = document.getElementById("insightBanner");
+    const timeline = document.getElementById("timeline");
+    const reportMeta = document.getElementById("reportMeta");
+    const reportOverview = document.getElementById("reportOverview");
+    const reportProgress = document.getElementById("reportProgress");
+    const reportWeaknessList = document.getElementById("reportWeaknessList");
+    const reportComment = document.getElementById("reportComment");
+    const studentCount = document.getElementById("studentCount");
+    const recordCount = document.getElementById("recordCount");
+    const selectedStudentLabel = document.getElementById("selectedStudentLabel");
+    const focusKeyword = document.getElementById("focusKeyword");
+    const resetDemoButton = document.getElementById("resetDemoButton");
+    const deleteStudentButton = document.getElementById("deleteStudentButton");
+    const copyMessageButton = document.getElementById("copyMessageButton");
+    const copyReportButton = document.getElementById("copyReportButton");
+    const printReportButton = document.getElementById("printReportButton");
+    const tagSelector = document.getElementById("tagSelector");
+    const recordDate = document.getElementById("recordDate");
+
+    recordDate.value = new Date().toISOString().split("T")[0];
+
+    tagSelector.addEventListener("click", (event) => {
+      const button = event.target.closest(".tag-btn");
+      if (!button) return;
+      const tag = button.dataset.tag;
+      const exists = selectedTags.includes(tag);
+      selectedTags = exists
+        ? selectedTags.filter((item) => item !== tag)
+        : [...selectedTags, tag];
+      button.classList.toggle("active", !exists);
+    });
+
+    studentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const newStudent = {
+        id: crypto.randomUUID(),
+        name: document.getElementById("studentName").value.trim(),
+        subject: document.getElementById("studentSubject").value,
+        grade: document.getElementById("studentGrade").value.trim(),
+        schedule: document.getElementById("studentSchedule").value.trim(),
+        parentNote: document.getElementById("parentNote").value.trim(),
+        focus: document.getElementById("studentFocus").value.trim()
+      };
+
+      state.students.unshift(newStudent);
+      selectedStudentId = newStudent.id;
+      persist();
+      studentForm.reset();
+      render();
+    });
+
+    recordForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const studentId = recordStudentSelect.value;
+      if (!studentId) return;
+
+      const record = {
+        id: crypto.randomUUID(),
+        studentId,
+        date: document.getElementById("recordDate").value,
+        understanding: document.getElementById("understandingLevel").value,
+        lessonSummary: document.getElementById("lessonSummary").value.trim(),
+        homework: document.getElementById("homework").value.trim(),
+        weaknessNotes: document.getElementById("weaknessNotes").value.trim(),
+        tags: [...selectedTags]
+      };
+
+      state.records.unshift(record);
+      selectedStudentId = studentId;
+      persist();
+      recordForm.reset();
+      selectedTags = [];
+      recordDate.value = new Date().toISOString().split("T")[0];
+      tagSelector.querySelectorAll(".tag-btn").forEach((button) => button.classList.remove("active"));
+      render();
+    });
+
+    resetDemoButton.addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    });
+
+    deleteStudentButton.addEventListener("click", () => {
+      const student = state.students.find((item) => item.id === selectedStudentId);
+      if (!student) {
+        alert("삭제할 학생이 없습니다.");
+        return;
+      }
+
+      const confirmed = window.confirm(`${student.name} 학생과 연결된 수업 기록을 모두 삭제할까요?`);
+      if (!confirmed) return;
+
+      const verifyName = window.prompt(`삭제를 진행하려면 학생 이름 "${student.name}"을(를) 다시 입력해 주세요.`);
+      if (verifyName === null) return;
+
+      if (verifyName.trim() !== student.name) {
+        alert("학생 이름이 일치하지 않아 삭제가 취소되었습니다.");
+        return;
+      }
+
+      state.students = state.students.filter((item) => item.id !== student.id);
+      state.records = state.records.filter((record) => record.studentId !== student.id);
+      selectedStudentId = state.students[0]?.id ?? null;
+      persist();
+      render();
+    });
+
+    copyMessageButton.addEventListener("click", async () => {
+      const text = messageBox.textContent.trim();
+      if (!text || text.includes("학생을 등록")) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyMessageButton.textContent = "복사 완료";
+        setTimeout(() => {
+          copyMessageButton.textContent = "문구 복사";
+        }, 1600);
+      } catch (error) {
+        copyMessageButton.textContent = "복사 실패";
+        setTimeout(() => {
+          copyMessageButton.textContent = "문구 복사";
+        }, 1600);
+      }
+    });
+
+    copyReportButton.addEventListener("click", async () => {
+      const text = buildReportPlainText();
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyReportButton.textContent = "복사 완료";
+        setTimeout(() => {
+          copyReportButton.textContent = "리포트 복사";
+        }, 1600);
+      } catch (error) {
+        copyReportButton.textContent = "복사 실패";
+        setTimeout(() => {
+          copyReportButton.textContent = "리포트 복사";
+        }, 1600);
+      }
+    });
+
+    printReportButton.addEventListener("click", () => {
+      window.print();
+    });
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return structuredClone(demoData);
+      try {
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed.students) || !Array.isArray(parsed.records)) {
+          return structuredClone(demoData);
+        }
+        return parsed;
+      } catch (error) {
+        return structuredClone(demoData);
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function render() {
+      renderStudentList();
+      renderStudentOptions();
+      renderSummary();
+      renderStudentInsights();
+    }
+
+    function renderStudentList() {
+      if (state.students.length === 0) {
+        studentList.innerHTML = '<div class="empty-state">등록된 학생이 없습니다.<br>왼쪽 폼에서 첫 학생을 추가해 주세요.</div>';
+        return;
+      }
+
+      studentList.innerHTML = state.students.map((student) => {
+        const recent = getStudentRecords(student.id)[0];
+        return `
+          <article class="student-card ${selectedStudentId === student.id ? "active" : ""}" data-student-id="${student.id}">
+            <div class="student-top">
+              <div class="student-name">${student.name}</div>
+              <span class="subject-pill">${student.subject}</span>
+            </div>
+            <div class="student-meta">
+              <span>${student.grade || "학년 미입력"} · ${student.schedule || "일정 미입력"}</span>
+              <span>${student.parentNote || "학부모 메모 없음"}</span>
+            </div>
+            <div class="student-focus">
+              <strong>현재 집중 영역</strong><br>
+              ${student.focus || "아직 설정된 집중 영역이 없습니다."}
+              <br><br>
+              <strong>최근 수업</strong><br>
+              ${recent ? `${formatDate(recent.date)} · ${recent.lessonSummary}` : "아직 수업 기록이 없습니다."}
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      studentList.querySelectorAll(".student-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          selectedStudentId = card.dataset.studentId;
+          render();
+        });
+      });
+    }
+
+    function renderStudentOptions() {
+      const options = ['<option value="">학생 선택</option>'].concat(
+        state.students.map((student) => `<option value="${student.id}" ${selectedStudentId === student.id ? "selected" : ""}>${student.name} · ${student.subject}</option>`)
+      );
+      recordStudentSelect.innerHTML = options.join("");
+    }
+
+    function renderSummary() {
+      studentCount.textContent = String(state.students.length);
+      recordCount.textContent = String(state.records.length);
+      const selectedStudent = state.students.find((student) => student.id === selectedStudentId);
+      selectedStudentLabel.textContent = selectedStudent ? selectedStudent.name : "-";
+      const tags = getStudentRecords(selectedStudentId).flatMap((record) => record.tags);
+      focusKeyword.textContent = tags[0] || "없음";
+      deleteStudentButton.disabled = !selectedStudent;
+      deleteStudentButton.style.opacity = selectedStudent ? "1" : "0.45";
+      deleteStudentButton.style.cursor = selectedStudent ? "pointer" : "not-allowed";
+    }
+
+    function renderStudentInsights() {
+      const student = state.students.find((item) => item.id === selectedStudentId);
+      if (!student) {
+        messageBox.textContent = "학생을 등록하고 수업 기록을 저장하면 이곳에 학부모용 알림장이 생성됩니다.";
+        progressTrend.textContent = "학생을 선택하면 최근 수업 흐름이 표시됩니다.";
+        weaknessSummary.textContent = "누적 기록이 생기면 자주 등장한 약점이 요약됩니다.";
+        understandingSummary.textContent = "최근 이해도와 수업 반응이 정리됩니다.";
+      insightBanner.textContent = "현재는 분석할 학생이 없습니다. 왼쪽에서 학생을 등록해 주세요.";
+      timeline.innerHTML = '<div class="empty-state">수업 기록이 아직 없습니다.</div>';
+      renderReport(null, []);
+      return;
+      }
+
+      const records = getStudentRecords(student.id);
+      const latestRecord = records[0];
+      const weaknessStats = countTags(records);
+      const weaknessText = Object.keys(weaknessStats).length
+        ? Object.entries(weaknessStats).slice(0, 3).map(([tag, count]) => `${tag} ${count}회`).join(", ")
+        : "아직 누적 약점 데이터가 없습니다.";
+      const understandingText = records.length
+        ? `최근 ${Math.min(records.length, 3)}회 수업 기준 이해도는 ${records.slice(0, 3).map((item) => item.understanding).join(" → ")} 흐름입니다.`
+        : "이해도 데이터가 아직 없습니다.";
+      const progressText = records.length
+        ? records.slice(0, 2).map((item) => `${formatDate(item.date)}: ${item.lessonSummary}`).join(" / ")
+        : "최근 진도 데이터가 없습니다.";
+
+      messageBox.textContent = latestRecord
+        ? generateParentMessage(student, latestRecord)
+        : "아직 수업 기록이 없어 알림장을 생성할 수 없습니다.";
+      progressTrend.textContent = progressText;
+      weaknessSummary.textContent = weaknessText;
+      understandingSummary.textContent = understandingText;
+      insightBanner.textContent = buildInsight(student, records, weaknessStats);
+      renderTimeline(records);
+      renderReport(student, records);
+    }
+
+    function renderTimeline(records) {
+      if (!records.length) {
+        timeline.innerHTML = '<div class="empty-state">선택한 학생의 수업 기록이 아직 없습니다.</div>';
+        return;
+      }
+
+      timeline.innerHTML = records.map((record) => `
+        <article class="timeline-item">
+          <div class="timeline-top">
+            <strong>${formatDate(record.date)}</strong>
+            <span>이해도 ${record.understanding}</span>
+          </div>
+          <div class="timeline-body">
+            <div><strong>오늘 수업</strong> ${record.lessonSummary}</div>
+            <div><strong>숙제</strong> ${record.homework}</div>
+            <div><strong>어려웠던 부분</strong> ${record.weaknessNotes}</div>
+            <div class="chip-row">${record.tags.map((tag) => `<span class="chip">${tag}</span>`).join("")}</div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function getStudentRecords(studentId) {
+      return state.records
+        .filter((record) => record.studentId === studentId)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
+    function generateParentMessage(student, record) {
+      return [
+        `${student.name} 학생 학부모님, 안녕하세요.`,
+        "",
+        `오늘 ${student.subject} 수업에서는 ${record.lessonSummary}`,
+        `숙제는 ${record.homework} 입니다.`,
+        `수업 중 이해도는 ${record.understanding} 수준이었고, 특히 ${record.weaknessNotes}`,
+        "",
+        "다음 수업 전까지 숙제를 확인해 주시면 학습 흐름을 더 안정적으로 이어갈 수 있습니다. 감사합니다."
+      ].join("\n");
+    }
+
+    function countTags(records) {
+      return records.reduce((acc, record) => {
+        record.tags.forEach((tag) => {
+          acc[tag] = (acc[tag] || 0) + 1;
+        });
+        return acc;
+      }, {});
+    }
+
+    function buildInsight(student, records, weaknessStats) {
+      if (!records.length) {
+        return `${student.name} 학생은 아직 수업 기록이 없습니다. 첫 수업 내용을 입력하면 누적 분석이 시작됩니다.`;
+      }
+
+      const topWeakness = Object.entries(weaknessStats).sort((a, b) => b[1] - a[1])[0];
+      const recentRecord = records[0];
+      const weaknessSentence = topWeakness
+        ? `가장 자주 나타난 약점은 ${topWeakness[0]}이며 현재까지 ${topWeakness[1]}회 기록되었습니다.`
+        : "아직 약점 태그는 기록되지 않았습니다.";
+
+      return `${student.name} 학생은 최근 ${records.length}회의 수업 기록이 누적되어 있습니다. ${weaknessSentence} 최근 수업에서는 "${recentRecord.weaknessNotes}"가 주요 관찰 내용으로 남았습니다.`;
+    }
+
+    function renderReport(student, records) {
+      if (!student) {
+        reportMeta.innerHTML = `
+          <div class="report-meta-item"><strong>학생 이름</strong><span>-</span></div>
+          <div class="report-meta-item"><strong>과목</strong><span>-</span></div>
+          <div class="report-meta-item"><strong>누적 수업 수</strong><span>0회</span></div>
+          <div class="report-meta-item"><strong>최근 기록일</strong><span>-</span></div>
+        `;
+        reportOverview.textContent = "학생을 선택하면 이곳에 누적 학습 요약이 생성됩니다.";
+        reportProgress.textContent = "학생 수업 기록이 아직 없습니다.";
+        reportWeaknessList.innerHTML = "<li>누적 데이터가 생기면 반복 약점이 정리됩니다.</li>";
+        reportComment.textContent = "학부모에게 전달할 요약 코멘트가 이곳에 생성됩니다.";
+        return;
+      }
+
+      const latestRecord = records[0];
+      const weaknessStats = countTags(records);
+      const weaknessItems = Object.entries(weaknessStats).sort((a, b) => b[1] - a[1]);
+      const recentUnderstanding = records.slice(0, 3).map((record) => record.understanding).join(" / ");
+
+      reportMeta.innerHTML = `
+        <div class="report-meta-item"><strong>학생 이름</strong><span>${student.name}</span></div>
+        <div class="report-meta-item"><strong>과목</strong><span>${student.subject}</span></div>
+        <div class="report-meta-item"><strong>누적 수업 수</strong><span>${records.length}회</span></div>
+        <div class="report-meta-item"><strong>최근 기록일</strong><span>${latestRecord ? formatDate(latestRecord.date) : "-"}</span></div>
+      `;
+
+      reportOverview.textContent = latestRecord
+        ? `${student.name} 학생은 현재 ${student.focus || "기초 학습 흐름 점검"}를 중심으로 수업을 이어가고 있습니다. 최근 수업에서는 ${latestRecord.lessonSummary}`
+        : `${student.name} 학생은 아직 수업 기록이 없습니다.`;
+
+      reportProgress.textContent = records.length
+        ? `${records.slice(0, 3).map((record) => `${formatDate(record.date)}에 ${record.lessonSummary}`).join(" ")} 최근 이해도 흐름은 ${recentUnderstanding || "기록 없음"}입니다.`
+        : "학생 수업 기록이 아직 없습니다.";
+
+      reportWeaknessList.innerHTML = weaknessItems.length
+        ? weaknessItems.slice(0, 4).map(([tag, count]) => `<li>${tag}: 총 ${count}회 기록되어 반복 관리가 필요한 영역입니다.</li>`).join("")
+        : "<li>아직 기록된 반복 약점이 없습니다.</li>";
+
+      reportComment.textContent = latestRecord
+        ? `${student.name} 학생은 최근 ${records.length}회의 수업 기록을 통해 학습 흐름이 누적 관리되고 있습니다. 특히 ${latestRecord.weaknessNotes} 부분을 중심으로 학습 경과를 살펴보고 있습니다.`
+        : "학부모에게 전달할 수업 기록이 아직 없습니다.";
+    }
+
+    function buildReportPlainText() {
+      const metaText = Array.from(reportMeta.querySelectorAll(".report-meta-item"))
+        .map((item) => {
+          const label = item.querySelector("strong")?.textContent ?? "";
+          const value = item.querySelector("span")?.textContent ?? "";
+          return `${label}: ${value}`;
+        })
+        .join("\n");
+
+      if (!metaText) return "";
+
+      const weaknessText = Array.from(reportWeaknessList.querySelectorAll("li"))
+        .map((item) => `- ${item.textContent}`)
+        .join("\n");
+
+      return [
+        "학생 누적 분석 리포트",
+        "",
+        metaText,
+        "",
+        `최근 학습 요약: ${reportOverview.textContent}`,
+        "",
+        `누적 학습 흐름: ${reportProgress.textContent}`,
+        "",
+        "반복적으로 어려워한 부분",
+        weaknessText,
+        "",
+        `학부모 공유 코멘트: ${reportComment.textContent}`
+      ].join("\n");
+    }
+
+    function formatDate(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString("ko-KR", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
