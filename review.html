@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassCare | 복습문제 AI 추천</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="review">
+  <div class="shell">
+    <nav class="app-nav">
+      <a class="nav-btn" href="index.html">홈</a>
+      <a class="nav-btn" href="students.html">학생 관리</a>
+      <a class="nav-btn" href="records.html">수업 기록</a>
+      <a class="nav-btn active" href="review.html">복습문제 AI 추천</a>
+      <a class="nav-btn" href="reports.html">리포트</a>
+    </nav>
+
+    <div class="two-col">
+      <section class="section-card">
+        <div class="card-title">
+          <div>
+            <h3>틀린 문제 이미지 업로드</h3>
+            <p class="muted">과외 선생님이 틀린 문제 사진을 올리고, 아래 메모에 핵심 오답 포인트를 적으면 비슷한 유형 문제를 추천합니다.</p>
+          </div>
+        </div>
+
+        <label>
+          학생 선택
+          <select id="reviewStudentSelect"></select>
+        </label>
+
+        <label>
+          틀린 문제 이미지
+          <input id="reviewImageInput" type="file" accept="image/*">
+        </label>
+
+        <div class="upload-preview" id="reviewImagePreview">
+          <span class="muted">업로드한 이미지가 여기에 표시됩니다.</span>
+        </div>
+
+        <label>
+          AI 인식 메모
+          <textarea id="reviewNotes" placeholder="예: 분수와 소수 혼합 계산에서 통분 없이 바로 계산함, 서술형에서 풀이 순서를 빠뜨림"></textarea>
+        </label>
+
+        <label>
+          문제 텍스트 직접 입력
+          <textarea id="reviewProblemText" placeholder="예: 다음 중 함수에 대한 설명으로 옳은 것은? / y=ax+b의 그래프 / 반비례 관계 / x, y 사이 대응 관계"></textarea>
+        </label>
+
+        <p class="muted">이미지는 현재 미리보기 용도이며, 추천 정확도를 높이려면 문제 문장이나 핵심 키워드를 직접 함께 입력해 주세요.</p>
+
+        <div class="button-row">
+          <button class="secondary-btn" id="extractOcrButton" type="button">OCR 텍스트 추출</button>
+          <button class="primary-btn" id="generateReviewButton" type="button">비슷한 유형 문제 추천받기</button>
+        </div>
+        <p class="muted" id="ocrStatus">OCR 대기 중</p>
+      </section>
+
+      <section class="section-card">
+        <div class="card-title">
+          <div>
+            <h3>AI 추천 복습문제</h3>
+            <p class="muted">이미지와 메모를 바탕으로 비슷한 유형의 실제 문제 문장을 추천합니다.</p>
+          </div>
+          <div class="button-row action-row">
+            <button class="secondary-btn" id="copyAiReviewButton" type="button">문제 복사</button>
+            <button class="secondary-btn" id="downloadReviewDocButton" type="button">문서로 저장</button>
+          </div>
+        </div>
+        <div class="mini-card">
+          <h3>선택 학생 정보</h3>
+          <p class="muted" id="reviewStudentInfo">학생을 선택하면 현재 학생 정보가 표시됩니다.</p>
+        </div>
+        <div class="report-sheet">
+          <h4>추천 문제 세트</h4>
+          <p class="muted" id="reviewSummary">이미지와 메모를 바탕으로 추천 문제가 생성됩니다.</p>
+          <ol class="problem-list" id="reviewProblemList">
+            <li>아직 생성된 추천 문제가 없습니다.</li>
+          </ol>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

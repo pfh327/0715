@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassCare | 수업 기록</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="records">
+  <div class="shell">
+    <nav class="app-nav">
+      <a class="nav-btn" href="index.html">홈</a>
+      <a class="nav-btn" href="students.html">학생 관리</a>
+      <a class="nav-btn active" href="records.html">수업 기록</a>
+      <a class="nav-btn" href="review.html">복습문제 AI 추천</a>
+      <a class="nav-btn" href="reports.html">리포트</a>
+    </nav>
+    <div class="two-col">
+      <section class="section-card">
+        <div class="card-title"><div><h3>새 수업 내용 입력</h3><p class="muted">학생관리는 별도 페이지에서 하고, 여기서는 수업 기록만 입력합니다.</p></div></div>
+        <form id="recordForm">
+          <label>학생 선택<select id="recordStudentSelect" required></select></label>
+          <div class="input-grid">
+            <label>수업 날짜<input type="date" id="recordDate" required></label>
+            <label>이해도<select id="understandingLevel" required><option value="">선택</option><option>높음</option><option>보통</option><option>낮음</option></select></label>
+          </div>
+          <label>오늘 배운 내용<textarea id="lessonSummary" required></textarea></label>
+          <label>숙제<textarea id="homework" required></textarea></label>
+          <label>어려워한 부분 / 반복 실수<textarea id="weaknessNotes" required></textarea></label>
+          <div>
+            <span class="helper">약점 태그</span>
+            <div class="tag-row" id="tagSelector">
+              <button class="tag-btn" data-tag="연산 실수" type="button">연산 실수</button>
+              <button class="tag-btn" data-tag="개념 이해" type="button">개념 이해</button>
+              <button class="tag-btn" data-tag="서술형" type="button">서술형</button>
+              <button class="tag-btn" data-tag="응용 문제" type="button">응용 문제</button>
+              <button class="tag-btn" data-tag="집중력" type="button">집중력</button>
+            </div>
+          </div>
+          <button class="primary-btn" type="submit">수업 기록 저장하기</button>
+        </form>
+      </section>
+      <section class="mini-card">
+        <h3>선택 학생 정보</h3>
+        <p class="muted" id="recordStudentInfo">학생을 선택하면 이곳에 현재 선택된 학생 정보가 표시됩니다.</p>
+      </section>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

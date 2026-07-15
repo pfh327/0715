@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassCare | 리포트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="reports">
+  <div class="shell">
+    <nav class="app-nav no-print">
+      <a class="nav-btn" href="index.html">홈</a>
+      <a class="nav-btn" href="students.html">학생 관리</a>
+      <a class="nav-btn" href="records.html">수업 기록</a>
+      <a class="nav-btn" href="review.html">복습문제 AI 추천</a>
+      <a class="nav-btn active" href="reports.html">리포트</a>
+    </nav>
+    <div class="report-grid">
+      <section class="mini-card no-print">
+        <h3>선택 학생 정보</h3>
+        <p class="muted" id="reportStudentInfo">학생관리 페이지에서 선택한 학생을 기준으로 리포트가 생성됩니다.</p>
+      </section>
+      <section class="report-card">
+        <div class="card-title no-print">
+          <div><h3>학생 누적 분석 리포트</h3><p class="muted">출력과 PDF 저장용 별도 페이지</p></div>
+          <div class="report-actions">
+            <button class="secondary-btn" id="copyReportButton" type="button">리포트 복사</button>
+            <button class="primary-btn" id="printReportButton" type="button">PDF / 인쇄</button>
+          </div>
+        </div>
+        <div class="report-sheet">
+          <h4>학생 누적 분석 리포트</h4>
+          <div class="report-meta" id="reportMeta"></div>
+          <div class="report-section"><strong>최근 학습 요약</strong><p id="reportOverview"></p></div>
+          <div class="report-section"><strong>누적 학습 흐름</strong><p id="reportProgress"></p></div>
+          <div class="report-section"><strong>반복적으로 어려워한 부분</strong><ul id="reportWeaknessList"></ul></div>
+          <div class="report-section"><strong>학부모 공유 코멘트</strong><p id="reportComment"></p></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
